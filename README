@@ -1,0 +1,5 @@
+SproutCore-Calendar is a calendar widget distributed as a SproutCore framework, ready to be included in a SproutCore application.
+
+It is in its very early stages of development. Don't expect it to work well, to be fully featured or to be correctly tested.
+
+The Calendar framework comes with a sample application to show how it can be integrated in a SproutCore application.
