@@ -1,3 +1,10 @@
-.sc-theme .calendar-calendar-view .sc-collection-view {
+.sc-theme .calendar-calendar-view .sc-collection-view,
+.sc-theme .calendar-calendar-view .sc-collection-view .sc-collection-item,
+.sc-theme.focus .calendar-calendar-view .sc-collection-view.focus .sc-collection-item.sel {
   border-top: none;
+}
+
+
+.calendar-calendar-view .calendar-day-view.other-month {
+  color: #7f7f7f;
 }

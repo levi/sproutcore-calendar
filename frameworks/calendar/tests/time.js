@@ -43,13 +43,13 @@ test('Setters and Getters', function() {
 
 test('Advance', function() {
   var t = SC.Time.create(testHash);
-  t.advance({year: 1, month: 1, day: 1, hours: 1, minutes: 1, seconds: 1, milliseconds: 1});
+  t._advance({year: 1, month: 1, day: 1, hours: 1, minutes: 1, seconds: 1, milliseconds: 1});
   timeShouldBeEqualToHash(t, {year: 1986, month: 6, day: 9, hours: 2, minutes: 1, seconds: 23, milliseconds: 926});
 });
 
 test('Beginning of week', function() {
   var t = SC.Time.create(testHash);
-  t.beginning_of_week();
+  t._beginning_of_week();
   timeShouldBeEqualToHash(t, {year: 1985, month: 5, day: 6, hours: 0, minutes: 0, seconds: 0, milliseconds: 0});
 });
 

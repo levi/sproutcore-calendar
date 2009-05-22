@@ -6,6 +6,27 @@
 
 require('time');
 
+Calendar.DayView = SC.LabelView.extend({
+  textAlign: SC.ALIGN_CENTER,
+  
+  render: function(context, firstTime) {
+    sc_super();
+    
+    var days_month = this.getPath('content.month');
+    var calendars_month = this.getPath('parentView.parentView.month.month');
+    
+    context.addClass('calendar-day-view');
+    
+    if (days_month === calendars_month) {
+      context.addClass('current-month');
+    } else {
+      context.addClass('other-month');
+    }
+    
+  }
+  
+});
+
 /** @class
 
   TODO: Describe
@@ -20,9 +41,9 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
   childViews: 'headerView subHeaderView contentView'.w(),
   
   allowsMultipleSelection: NO,
-  month: SC.Time.create(),
+  month: null,
   days: SC.ArrayController.create(),
-  
+    
   headerView: SC.View.extend({
     layout: { top: 0, left: 0, right: 0, height: 24 },
     childViews: 'previousMonthButton monthLabel nextMonthButton'.w(),
@@ -35,7 +56,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
       }),
     monthLabel: SC.LabelView.extend({
       layout: { top: 0, left: 24, right: 24, height: 24 },
-      valueBinding: SC.Binding.transform(SC.Time.transform('%B %Y')).from('.parentView.parentView.month'),
+      valueBinding: SC.Binding.transform(SC.Time.transform('%B %Y')).oneWay('.parentView.parentView.month'),
       textAlign: SC.ALIGN_CENTER }),
     nextMonthButton: SC.ButtonView.extend({
       layout: { top: 0, right: 0, width: 24 },
@@ -61,7 +82,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
           layout: {left: i*29, top: 0, width: 29, height: 24},
           value: t.toFormattedString('%a')
         });
-        t.advance({day: 1});
+        t._advance({day: 1});
       }
       this.endPropertyChanges();
       
@@ -74,8 +95,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
     itemsPerRow: 7,
     rowHeight: 25,
     columnWidth: 25,
-    exampleView: SC.LabelView.extend({
-      textAlign: SC.ALIGN_CENTER }),
+    exampleView: Calendar.DayView,
     contentBinding: '.parentView.days.arrangedObjects',
     contentValueKey: 'day',
     selectionBinding: '.parentView.days.selection'
@@ -83,10 +103,10 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
   
   monthDidChange: function() {    
     var days = [];
-    days[0] = SC.clone(this.get('month').change({day: 1})).beginning_of_week();
-    for (var i = 1; i < 42; i++) days[i] = SC.clone(days[i-1]).advance({day: 1});
-    this.days.set('content', days);
-  }.observes('month'),
+    days[0] = this.get('month').beginning_of_week();
+    for (var i = 1; i < 42; i++) days[i] = days[i-1].advance({day: 1});
+    this.setPath('days.content', days);
+  }.observes('*month.value'),
   
   selection: function() {
     var selection = this.days.get('selection');
@@ -104,18 +124,18 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
   }.observes('.days.selection'),
   
   incrementMonth: function() {
-    this.set('month', SC.clone(this.get('month')).advance({month: +1}));
+    this.set('month', this.get('month').advance({month: +1}));
   },
   
   decrementMonth: function() {
-    this.set('month', SC.clone(this.get('month')).advance({month: -1}));
+    this.set('month', this.get('month').advance({month: -1}));
   },
   
   init: function() {
     sc_super();
-    this.set('month', SC.Time.create());
-    this.days.set('allowsMultipleSelection', this.get('allowsMultipleSelection'));
-    this.days.set('selection', [SC.Time.create()]);
+    this.set('month', SC.Time.create({day: 1}));
+    this.setPath('days.allowsMultipleSelection', this.get('allowsMultipleSelection'));
+    this.setPath('days.selection', [SC.Time.create()]);
   }
   
 });

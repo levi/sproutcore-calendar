@@ -18,7 +18,7 @@ SC.Time = SC.Object.extend({
     sc_super();
     
     if (SC.none(this.date)) this.set('date', new Date());
-    this.change(this);
+    this._change(this);
     
     delete this.year;
     delete this.month;
@@ -37,9 +37,9 @@ SC.Time = SC.Object.extend({
     return SC.Time.create({date: d});
   },
   
-  change: function(options) {
+  _change: function(options) {
     var d = this.get('date');
-    
+
     if (!SC.none(options.year))         d.setFullYear(options.year);
     if (!SC.none(options.month))        d.setMonth(options.month-1); // January is 0 in JavaScript
     if (!SC.none(options.day))          d.setDate(options.day);
@@ -47,8 +47,12 @@ SC.Time = SC.Object.extend({
     if (!SC.none(options.minutes))      d.setMinutes(options.minutes);
     if (!SC.none(options.seconds))      d.setSeconds(options.seconds);
     if (!SC.none(options.milliseconds)) d.setMilliseconds(options.milliseconds);
-
+    
     return this;
+  },
+  
+  change: function(options) {
+    return this.clone()._change(options);
   },
 
   isLeapYear: function() {
@@ -75,7 +79,7 @@ SC.Time = SC.Object.extend({
     if (!(value === undefined)) {
       var options = {};
       options[key] = value;
-      this.change(options);
+      this._change(options);
       return this;
      
     // get
@@ -96,22 +100,30 @@ SC.Time = SC.Object.extend({
     return undefined;
   },
   
-  beginning_of_week: function() {
+  _beginning_of_week: function() {
     var day_of_week = this.get('date').getDay();
     var days_to_monday = day_of_week !== 0 ? day_of_week-1 : 6;
     
-    this.advance({day: -1 * days_to_monday});
-    this.change({hours: 0, minutes: 0, seconds: 0, milliseconds: 0});
+    this._advance({day: -1 * days_to_monday});
+    this._change({hours: 0, minutes: 0, seconds: 0, milliseconds: 0});
     
     return this;
+  },
+  
+  beginning_of_week: function() {
+    return this.clone()._beginning_of_week();
   },
   
   /*
     only works with integers, floating point computing gives unpredictable results in JavaScript
   */
-  advance: function(options) {
+  _advance: function(options) {
     for (var key in options) options[key] += this.get(key);
-    return this.change(options);
+    return this._change(options);
+  },
+  
+  advance: function(options) {
+    return this.clone()._advance(options);
   },
   
   toString: function() {
