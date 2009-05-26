@@ -59,3 +59,15 @@ test('Format', function() {
     t.toFormattedString('%a %A %b %B %d %H %I %m %M %p %S %w %y %Y %%a'),
     'Wed Wednesday May May 08 01 01 05 00 AM 22 3 85 1985 %a');
 });
+
+test('Freezable', function() {
+  var t = SC.Time.create(testHash);
+  var error = null;
+  t.freeze();
+  try {
+    t._advance({hour: 1});
+  } catch (e) {
+    error = e;
+  }
+  equals(error, SC.FROZEN_ERROR, 'It should be impossible to mutate a frozen object');
+});

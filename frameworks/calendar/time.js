@@ -10,7 +10,7 @@
   
   @extend SC.Object
 */
-SC.Time = SC.Object.extend({
+SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
   
   date: null,
   
@@ -31,13 +31,15 @@ SC.Time = SC.Object.extend({
     return this;
   },
   
-  clone: function() {
+  copy: function() {
     var d = new Date();
     d.setTime(this.get('date').getTime());
     return SC.Time.create({date: d});
   },
   
   _change: function(options) {
+    if (this.isFrozen) throw SC.FROZEN_ERROR;
+    
     var d = this.get('date');
 
     if (!SC.none(options.year))         d.setFullYear(options.year);
@@ -52,7 +54,7 @@ SC.Time = SC.Object.extend({
   },
   
   change: function(options) {
-    return this.clone()._change(options);
+    return this.copy()._change(options);
   },
 
   isLeapYear: function() {
@@ -111,7 +113,7 @@ SC.Time = SC.Object.extend({
   },
   
   beginning_of_week: function() {
-    return this.clone()._beginning_of_week();
+    return this.copy()._beginning_of_week();
   },
   
   /*
@@ -123,7 +125,7 @@ SC.Time = SC.Object.extend({
   },
   
   advance: function(options) {
-    return this.clone()._advance(options);
+    return this.copy()._advance(options);
   },
   
   toString: function() {
