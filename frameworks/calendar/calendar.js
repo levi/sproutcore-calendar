@@ -12,7 +12,8 @@ Calendar.DayView = SC.LabelView.extend({
   render: function(context, firstTime) {
     sc_super();
     
-    var days_month = this.getPath('content.month');
+    var day = this.get('content');
+    var days_month = day.get('month');
     var calendars_month = this.getPath('parentView.parentView.month.month');
     
     context.addClass('calendar-day-view');
@@ -21,6 +22,10 @@ Calendar.DayView = SC.LabelView.extend({
       context.addClass('current-month');
     } else {
       context.addClass('other-month');
+    }
+    
+    if (day.isToday()) {
+      context.addClass('today');
     }
     
   }
@@ -41,6 +46,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
   childViews: 'headerView subHeaderView contentView'.w(),
   
   allowsMultipleSelection: NO,
+  
   month: null,
   days: SC.ArrayController.create(),
     

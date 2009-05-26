@@ -198,8 +198,14 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
       case 'Z': return; //TODO
       case '%': return '%';
     }
+  },
+  
+  isToday: function() {
+    var today = SC.Time.create();
+    return this.get('year') === today.get('year')
+      && this.get('month') === today.get('month')
+      && this.get('day') === today.get('day');
   }
-
   
 });
 
