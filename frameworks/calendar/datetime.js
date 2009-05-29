@@ -10,7 +10,54 @@
   
   @extend SC.Object
 */
-SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
+
+SC.SCANNER_OUT_OF_BOUNDS_ERROR = new Error("Out of bounds.");
+SC.SCANNER_INT_ERROR = new Error("Not an int.");
+SC.SCANNER_SKIP_ERROR = new Error("Did not find the string/array to skip.");
+
+SC.Scanner = SC.Object.extend({
+  
+  string: null,
+  scanLocation: 0,
+  
+  scan: function(len) {
+    if (this.scanLocation + len > this.length) throw SC.SCANNER_OUT_OF_BOUNDS_ERROR;
+    var str = this.string.substr(this.scanLocation, len);
+    this.scanLocation += len;
+    return str;
+  },
+  
+  scanInt: function(len) {
+    var str = this.scan(len);
+    var re = new RegExp("\\d{"+len+"}");
+    if (!str.match(re)) throw SC.SCANNER_INT_ERROR;
+    return parseInt(str, 10);
+  },
+  
+  skipString: function(str) {
+    if (this.scan(str.length) !== str) throw SC.SCANNER_SKIP_ERROR;
+    return YES;
+  },
+  
+  scanArray: function(ary) {
+    for (var i = 0, len = ary.length; i < len; i++) {
+      if (this.scan(ary[i].length) === ary[i]) {
+        return i;
+      }
+      this.scanLocation -= ary[i].length;
+    }
+    throw SC.SCANNER_SKIP_ERROR;
+  }
+  
+});
+
+/** @class
+
+  TODO: Describe
+  
+  @extend SC.Object
+*/
+SC.DateTime = SC.Object.extend(SC.Freezable, SC.Copyable, {
   
   date: null,
   
@@ -18,7 +65,14 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
     sc_super();
     
     if (SC.none(this.date)) this.set('date', new Date());
-    this._change(this);
+    this._change({
+      year:         this.year,
+      month:        this.month,
+      day:          this.day,
+      hours:        this.hours,
+      minutes:      this.minutes,
+      seconds:      this.seconds,
+      milliseconds: this.milliseconds });
     
     delete this.year;
     delete this.month;
@@ -34,10 +88,20 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
   copy: function() {
     var d = new Date();
     d.setTime(this.get('date').getTime());
-    return SC.Time.create({date: d});
+    return SC.DateTime.create({date: d});
   },
   
   _change: function(options) {
+    var opts = SC.clone(options);
+    
+    if (!SC.none(options.hours) && SC.none(options.minutes)) opts.minutes = 0;
+    if ((!SC.none(options.hours) || !SC.none(options.minutes)) && SC.none(options.seconds)) opts.seconds = 0;
+    if ((!SC.none(options.hours) || !SC.none(options.minutes) || !SC.none(options.seconds)) && SC.none(options.milliseconds)) opts.milliseconds = 0;
+    
+    return this._rawChange(opts);
+  },
+  
+  _rawChange: function(options) {
     if (this.isFrozen) throw SC.FROZEN_ERROR;
     
     var d = this.get('date');
@@ -81,8 +145,7 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
     if (!(value === undefined)) {
       var options = {};
       options[key] = value;
-      this._change(options);
-      return this;
+      return this._rawChange(options);
      
     // get
     } else {
@@ -161,10 +224,6 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
     %% - Literal ``%'' character
   */
   
-  dayNames:'_SC.Time.dayNames'.loc().w(),
-  abbreviatedDayNames: '_SC.Time.abbreviatedDayNames'.loc().w(),
-  monthNames: '_SC.Time.monthNames'.loc().w(),
-  abbreviatedMonthNames: '_SC.Time.abbreviatedMonthNames'.loc().w(),
   pad: function(x) { return (x<0||x>9 ? '' : '0') + x; },
   
   toFormattedString: function(format) {
@@ -175,10 +234,10 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
   _toFormattedString: function(part) {
     var hours = this.get('hours');
     switch(part[1]) {
-      case 'a': return this.abbreviatedDayNames[this.get('dayOfWeek')];
-      case 'A': return this.dayNames[this.get('dayOfWeek')];
-      case 'b': return this.abbreviatedMonthNames[this.get('month')-1];
-      case 'B': return this.monthNames[this.get('month')-1];
+      case 'a': return SC.DateTime.abbreviatedDayNames[this.get('dayOfWeek')];
+      case 'A': return SC.DateTime.dayNames[this.get('dayOfWeek')];
+      case 'b': return SC.DateTime.abbreviatedMonthNames[this.get('month')-1];
+      case 'B': return SC.DateTime.monthNames[this.get('month')-1];
       case 'c': return this.toString();
       case 'd': return this.pad(this.get('day'));
       case 'H': return this.pad(hours);
@@ -201,7 +260,7 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
   },
   
   isToday: function() {
-    var today = SC.Time.create();
+    var today = SC.DateTime.create();
     return this.get('year') === today.get('year')
       && this.get('month') === today.get('month')
       && this.get('day') === today.get('day');
@@ -210,11 +269,66 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
 });
 
 // Class Methods
-SC.Time.mixin(/** @scope SC.Time */{
+SC.DateTime.mixin(/** @scope SC.Time */{
+  
+  dayNames:'_SC.DateTime.dayNames'.loc().w(),
+  abbreviatedDayNames: '_SC.DateTime.abbreviatedDayNames'.loc().w(),
+  monthNames: '_SC.DateTime.monthNames'.loc().w(),
+  abbreviatedMonthNames: '_SC.DateTime.abbreviatedMonthNames'.loc().w(),
+  
+  createFromString: function(str, fmt) {
+    var re = /(?:\%([aAbBcdHIjmMpSUWwxXyYZ\%])|(.))/g;
+    var parts, opts = {}, check = {}, scanner = SC.Scanner.create({string: str});
+    try {
+      while ((parts = re.exec(fmt)) !== null) {
+        switch(parts[1]) {
+          case 'a': check.dayOfWeek = scanner.scanArray(this.abbreviatedDayNames); break;
+          case 'A': check.dayOfWeek = scanner.scanArray(this.dayNames); break;
+          case 'b': opts.month = scanner.scanArray(this.abbreviatedMonthNames) + 1; break;
+          case 'B': opts.month = scanner.scanArray(this.monthNames) + 1; break;
+          case 'c': break; //TODO
+          case 'd': opts.day = scanner.scanInt(2); break;
+          case 'H': opts.hours = scanner.scanInt(2); break;
+          case 'I': break; //TODO
+          case 'j': break; //TODO
+          case 'm': opts.month = scanner.scanInt(2); break;
+          case 'M': opts.minutes = scanner.scanInt(2); break;
+          case 'p': opts.meridian = scanner.scanArray(['AM', 'PM']); break;
+          case 'S': opts.seconds = scanner.scanInt(2); break;
+          case 'U': break; //TODO
+          case 'W': break; //TODO
+          case 'w': break; //TODO
+          case 'x': break; //TODO
+          case 'X': break; //TODO
+          case 'y': opts.year = scanner.scanInt(2); opts.year += (opts.year > 70 ? 1900 : 2000); break;
+          case 'Y': opts.year = scanner.scanInt(4); break;
+          case 'Z': break; //TODO
+          case '%': scanner.skipString('%'); break;
+          default: scanner.skipString(parts[0]); break;
+        }
+      }
+    } catch (e) {
+      console.log('SC.DateTime.createFromString ' + e.toString());
+      return null;
+    }
+    
+    if (!SC.none(opts.meridian) && !SC.none(opts.hours)) {
+      if (opts.meridian === 1) opts.hours = (opts.hours + 12) % 24;
+      delete opts.meridian;
+    }
+    
+    var d = SC.DateTime.create(opts);
+    
+    if (!SC.none(check.dayOfWeek) && d.get('dayOfWeek') !== check.dayOfWeek) {
+      return null;
+    }
+    
+    return d;
+  },
   
   /*
     for use with bindings
-    eg: SC.Binding.transform(SC.Time.transform('%B')).oneWay('myDate')
+    eg: SC.Binding.transform(SC.DateTime.transform('%B')).oneWay('myDate')
   */
   transform: function(format) {
     return function(value, binding) { return value ? value.toFormattedString(format) : null; };

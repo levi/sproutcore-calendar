@@ -4,7 +4,7 @@
 // ==========================================================================
 /*globals Calendar */
 
-require('time');
+require('datetime');
 
 Calendar.DayView = SC.LabelView.extend({
   textAlign: SC.ALIGN_CENTER,
@@ -62,7 +62,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
       }),
     monthLabel: SC.LabelView.extend({
       layout: { top: 0, left: 24, right: 24, height: 24 },
-      valueBinding: SC.Binding.transform(SC.Time.transform('%B %Y')).oneWay('.parentView.parentView.month'),
+      valueBinding: SC.Binding.transform(SC.DateTime.transform('%B %Y')).oneWay('.parentView.parentView.month'),
       textAlign: SC.ALIGN_CENTER }),
     nextMonthButton: SC.ButtonView.extend({
       layout: { top: 0, right: 0, width: 24 },
@@ -80,7 +80,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
     }),
     createChildViews: function() {
       var childViews = this.get('childViews');
-      var t = SC.Time.create().beginning_of_week();
+      var t = SC.DateTime.create().beginning_of_week();
       
       this.beginPropertyChanges();
       for (var i = 0; i < 7; i++) {
@@ -139,9 +139,9 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
   
   init: function() {
     sc_super();
-    this.set('month', SC.Time.create({day: 1}));
+    this.set('month', SC.DateTime.create({day: 1}));
     this.setPath('days.allowsMultipleSelection', this.get('allowsMultipleSelection'));
-    this.setPath('days.selection', [SC.Time.create()]);
+    this.setPath('days.selection', [SC.DateTime.create()]);
   }
   
 });
