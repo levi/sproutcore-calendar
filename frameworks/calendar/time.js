@@ -120,8 +120,9 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
     only works with integers, floating point computing gives unpredictable results in JavaScript
   */
   _advance: function(options) {
-    for (var key in options) options[key] += this.get(key);
-    return this._change(options);
+    var o = SC.clone(options);
+    for (var key in o) o[key] += this.get(key);
+    return this._change(o);
   },
   
   advance: function(options) {
@@ -200,11 +201,31 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
     }
   },
   
+  compare: function(anotherTime) {
+    var t1 = this.get('date').getTime();
+    var t2 = anotherTime.getTime();
+    return t1 < t2 ? -1 : t1 === t2 ? 0 : 1;
+  },
+  
+  compareDate: function(anotherTime) {
+    var t1 = [this.get('year'), this.get('month'), this.get('day')];
+    var t2 = [anotherTime.get('year'), anotherTime.get('month'), anotherTime.get('day')];
+    return SC.compare(t1, t2);
+  },
+  
+  compareTime: function(anotherTime) {
+    var t1 = [this.get('hours'), this.get('minutes'), this.get('seconds'), this.get('milliseconds')];
+    var t2 = [anotherTime.get('hours'), anotherTime.get('minutes'), anotherTime.get('seconds'), anotherTime.get('milliseconds')];
+    return SC.compare(t1, t2);
+  },
+  
   isToday: function() {
-    var today = SC.Time.create();
-    return this.get('year') === today.get('year')
-      && this.get('month') === today.get('month')
-      && this.get('day') === today.get('day');
+    return this.compareDate(SC.Time.create()) === 0;
+  },
+  
+  isTodayPlus: function(offset) {
+    offset = offset ? offset : {};
+    return this.compareDate(SC.Time.create()._advance(offset)) === 0;
   }
   
 });
@@ -212,12 +233,36 @@ SC.Time = SC.Object.extend(SC.Freezable, SC.Copyable, {
 // Class Methods
 SC.Time.mixin(/** @scope SC.Time */{
   
+  createFromString: function(str, fmt) {
+    ///\%([aAbBcdHIjmMpSUWwxXyYZ])/g
+  },
+  
   /*
     for use with bindings
     eg: SC.Binding.transform(SC.Time.transform('%B')).oneWay('myDate')
   */
   transform: function(format) {
-    return function(value, binding) { return value ? value.toFormattedString(format) : null; };
+    return function(value, binding) { 
+      if (value.kindOf(SC.Time)) {
+        return value ? value.toFormattedString(format) : null;
+      } else if (SC.typeOf(value) === SC.T_STRING) {
+        return SC.Time.createFromString(value, format);
+      }
+      return null;
+    };
+  },
+  
+  isTodayTransform: function(offset) {
+    if (SC.none(offset)) offset = {};
+    return function (value, binding) { return value.advance(offset).isToday(); };
+  },
+  
+  isNextTransform: function(dayOfWeek) {
+    dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek-1;
+    return function (value, binding) {
+      var nextDay = SC.Time.create()._beginning_of_week()._advance({day: dayOfWeek});
+      return value.compareDate(nextDay) === 0;
+    };
   }
   
 });

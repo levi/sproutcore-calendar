@@ -114,14 +114,17 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
     this.setPath('days.content', days);
   }.observes('*month.value'),
   
-  selection: function() {
+  selection: function(key, value) {
     var selection = this.days.get('selection');
+    if (value !== undefined) {
+      this.days.set('selection', this.days.find(function(day) { return this.compareDate(day) === 0; }, value));
+    }
     if (selection && !this.get('allowsMultipleSelection')) {
       selection = selection[0]; 
     }
     return selection;
   }.property('.days.selection'),
-
+  
   // FIXME: I think this is a bug in SC: if '.days.selection' changes,
   // then the observers of the 'selection' property are not notified.
   // The method below is a workaround.
