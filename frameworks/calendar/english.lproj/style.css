@@ -1,6 +1,7 @@
 .sc-theme .calendar-calendar-view .sc-collection-view,
 .sc-theme .calendar-calendar-view .sc-collection-view .sc-collection-item,
-.sc-theme.focus .calendar-calendar-view .sc-collection-view.focus .sc-collection-item.sel {
+.sc-theme.focus .calendar-calendar-view .sc-collection-view.focus .sc-collection-item.sel,
+.sc-theme .calendar-calendar-view .sc-collection-view .sc-collection-item.sel {
   border-top: none;
 }
 

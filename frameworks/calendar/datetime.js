@@ -183,8 +183,9 @@ SC.DateTime = SC.Object.extend(SC.Freezable, SC.Copyable, {
     only works with integers, floating point computing gives unpredictable results in JavaScript
   */
   _advance: function(options) {
-    for (var key in options) options[key] += this.get(key);
-    return this._change(options);
+    var o = SC.clone(options);
+    for (var key in o) o[key] += this.get(key);
+    return this._change(o);
   },
   
   advance: function(options) {
@@ -259,17 +260,32 @@ SC.DateTime = SC.Object.extend(SC.Freezable, SC.Copyable, {
     }
   },
   
+  compare: function(dt) {
+    var t1 = this.get('date').getTime();
+    var t2 = dt.get('date').getTime();
+    return t1 < t2 ? -1 : t1 === t2 ? 0 : 1;
+  },
+  
+  compareDate: function(dt) {
+    var t1 = [this.get('year'), this.get('month'), this.get('day')];
+    var t2 = [dt.get('year'), dt.get('month'), dt.get('day')];
+    return SC.compare(t1, t2);
+  },
+  
+  compareTime: function(dt) {
+    var t1 = [this.get('hours'), this.get('minutes'), this.get('seconds'), this.get('milliseconds')];
+    var t2 = [dt.get('hours'), dt.get('minutes'), dt.get('seconds'), dt.get('milliseconds')];
+    return SC.compare(t1, t2);
+  },
+  
   isToday: function() {
-    var today = SC.DateTime.create();
-    return this.get('year') === today.get('year')
-      && this.get('month') === today.get('month')
-      && this.get('day') === today.get('day');
+    return this.compareDate(SC.DateTime.create()) === 0;
   }
   
 });
 
 // Class Methods
-SC.DateTime.mixin(/** @scope SC.Time */{
+SC.DateTime.mixin(/** @scope SC.DateTime */{
   
   dayNames:'_SC.DateTime.dayNames'.loc().w(),
   abbreviatedDayNames: '_SC.DateTime.abbreviatedDayNames'.loc().w(),
@@ -331,7 +347,14 @@ SC.DateTime.mixin(/** @scope SC.Time */{
     eg: SC.Binding.transform(SC.DateTime.transform('%B')).oneWay('myDate')
   */
   transform: function(format) {
-    return function(value, binding) { return value ? value.toFormattedString(format) : null; };
+    return function(value, binding) { 
+      if (value.kindOf(SC.DateTime)) {
+        return value ? value.toFormattedString(format) : null;
+      } else if (SC.typeOf(value) === SC.T_STRING) {
+        return SC.DateTime.createFromString(value, format);
+      }
+      return null;
+    };
   }
   
 });
