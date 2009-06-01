@@ -112,17 +112,20 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
     days[0] = this.get('month').beginning_of_week();
     for (var i = 1; i < 42; i++) days[i] = days[i-1].advance({day: 1});
     this.setPath('days.content', days);
+    this.set('selection', this.get('selection'));
   }.observes('*month.value'),
   
+  _selection: null,
   selection: function(key, value) {
-    var selection = this.days.get('selection');
     if (value !== undefined) {
-      this.days.set('selection', this.days.find(function(day) { return this.compareDate(day) === 0; }, value));
+      this._selection = value;
+      this.days.set('selection', value === null ? null : this.days.find(function(day) { return this.compareDate(day) === 0; }, value));
+      return this;
     }
-    if (selection && !this.get('allowsMultipleSelection')) {
-      selection = selection[0]; 
-    }
-    return selection;
+    
+    var selection = this.days.getPath('selection');
+    if (selection && selection[0] && selection[0] !== this._selection) this._selection = selection[0];    
+    return this._selection;
   }.property('.days.selection'),
   
   // FIXME: I think this is a bug in SC: if '.days.selection' changes,
@@ -144,7 +147,7 @@ Calendar.CalendarView = SC.View.extend(SC.Control,
     sc_super();
     this.set('month', SC.DateTime.create({day: 1}));
     this.setPath('days.allowsMultipleSelection', this.get('allowsMultipleSelection'));
-    this.setPath('days.selection', [SC.DateTime.create()]);
+    this.set('selection', SC.DateTime.create());
   }
   
 });
