@@ -570,10 +570,12 @@ SC.DateTime.mixin(
   */
   transform: function(format) {
     return function(value, binding) { 
-      if (value.kindOf(SC.DateTime)) {
-        return value ? value.toFormattedString(format) : null;
-      } else if (SC.typeOf(value) === SC.T_STRING) {
-        return SC.DateTime.createFromString(value, format);
+      if (value) {
+        if (value.kindOf(SC.DateTime)) {
+          return value ? value.toFormattedString(format) : null;
+        } else if (SC.typeOf(value) === SC.T_STRING) {
+          return SC.DateTime.createFromString(value, format);
+        }
       }
       return null;
     };
