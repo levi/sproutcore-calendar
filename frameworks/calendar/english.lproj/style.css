@@ -1,13 +1,18 @@
-.sc-theme .calendar-calendar-view .sc-collection-view,
-.sc-theme .calendar-calendar-view .sc-collection-view .sc-collection-item,
-.sc-theme.focus .calendar-calendar-view .sc-collection-view.focus .sc-collection-item.sel {
-  border-top: none;
+.calendar-view {
+  color: #000;
 }
 
-.calendar-calendar-view .calendar-day-view.other-month {
-  color: #7f7f7f;
+.calendar-weekdays-view {
+  font-weight: bold;
 }
 
-.calendar-calendar-view .today {
-  background-color: #9f7fbe;
+.calendar-day.sel {
+  background-color: #2370d8;
+  color: #fff;
+  font-weight: bold;
+}
+
+
+.calendar-day {
+  line-height: 24px;
 }
