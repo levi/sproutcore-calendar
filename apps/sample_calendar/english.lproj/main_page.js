@@ -21,7 +21,7 @@ SampleCalendar.mainPage = SC.Page.design({
     
     selectedDateLabelView: SC.LabelView.design({
       layout: {top: 208, left: 0, width: 203, height: 22},
-      valueBinding:  SC.Binding.transform(SC.DateTime.transform('%x')).from('SampleCalendar.mainPage.mainPane.calendarView.selection'),
+      valueBinding:  SC.Binding.dateTime('%x').from('SampleCalendar.mainPage.mainPane.calendarView.selection'),
       textAlign: SC.ALIGN_CENTER
     })
 
