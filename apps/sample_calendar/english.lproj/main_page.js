@@ -12,18 +12,18 @@ SampleCalendar.mainPage = SC.Page.design({
   // Add childViews to this pane for views to display immediately on page 
   // load.
   mainPane: SC.MainPane.design({
-    childViews: 'calendarView'.w(),
+    childViews: 'calendarView selectedDateLabelView'.w(),
     
     calendarView: Calendar.CalendarView.design({
       layout: {top: 0, left: 0, width: 203, height: 198},
       backgroundColor: 'white'
-    })
+    }),
     
-    // selectedDateLabelView: SC.LabelView.design({
-    //   layout: {top: 208, left: 0, width: 203, height: 22},
-    //   valueBinding:  SC.Binding.transform(SC.DateTime.transform('%x')).from('SampleCalendar.mainPage.mainPane.calendarView.selection'),
-    //   textAlign: SC.ALIGN_CENTER
-    // })
+    selectedDateLabelView: SC.LabelView.design({
+      layout: {top: 208, left: 0, width: 203, height: 22},
+      valueBinding:  SC.Binding.dateTime('%x').from('SampleCalendar.mainPage.mainPane.calendarView.selection'),
+      textAlign: SC.ALIGN_CENTER
+    })
 
   })
 

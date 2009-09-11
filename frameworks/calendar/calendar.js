@@ -27,7 +27,7 @@ Calendar.CalendarView = SC.View.extend(
     classNames: 'calendar-header-view',
     previousMonthButton: SC.ButtonView.extend({
       layout: { top: 0, left: 0, width: 24 },
-      title: '<',
+      title: '←',
       titleMinWidth: 0,
       action: function() { this.getPath('parentView.parentView').decrementMonth(); }
     }),
@@ -39,7 +39,7 @@ Calendar.CalendarView = SC.View.extend(
     }),
     nextMonthButton: SC.ButtonView.extend({
       layout: { top: 0, right: 0, width: 24 },
-      title: '>',
+      title: '→',
       titleMinWidth: 0,
       action: function() { this.getPath('parentView.parentView').incrementMonth(); }
     })
@@ -70,6 +70,7 @@ Calendar.CalendarView = SC.View.extend(
     layout: { top: 48, left: 0, right: 0, height: 150 },
     classNames: 'calendar-days-view',
     month: null,
+    day: null,
     selection: {index: null, month: null},
     render: function(context, firstTime) {
       var i;
@@ -91,6 +92,7 @@ Calendar.CalendarView = SC.View.extend(
         var month = this.getPath('parentView.month');
         var day = month.adjust({day: 1});
         if (day.get('dayOfWeek') !== 1) day = day.get('lastMonday');
+        this.set('day', day);
         var displayedMonth = this.get('month');
         var divs = this.$().children();
         
@@ -115,6 +117,7 @@ Calendar.CalendarView = SC.View.extend(
       var target = SC.$(evt.target);
       var i = target.parent().children().index(target);
       this.set('selection', { index: i, month: this.get('month') });
+      this.setPath('parentView.selection', this.get('day').advance({day: i}));
       this.set('layerNeedsUpdate', YES);
     }
   }),
