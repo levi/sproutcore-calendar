@@ -17,7 +17,7 @@ Calendar.CalendarView = SC.View.extend(
 
   childViews: 'headerView weekdaysView daysView'.w(),
   
-  month: null,
+  month: SC.DateTime.create(),
   
   selection: null,
   minSelection: null,
